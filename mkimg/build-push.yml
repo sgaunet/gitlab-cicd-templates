@@ -1,0 +1,32 @@
+stages:
+    - build
+    - build_tag
+    
+build:
+    stage: build
+    only:
+      - main
+      - master
+    image: docker:stable
+    services:
+      - docker:dind
+    script:
+      - echo "CI_PROJECT_NAME=$CI_PROJECT_NAME"
+      - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD quay.io
+      - docker build -t $REGISTRY/$CI_PROJECT_NAME:latest .
+      - docker push $REGISTRY/$CI_PROJECT_NAME:latest
+
+
+build_tag:
+    stage: build_tag
+    when: on_success
+    only:
+      - tags
+    image: docker:stable
+    services:
+      - docker:dind
+    script:
+      - echo "CI_PROJECT_NAME=$CI_PROJECT_NAME"
+      - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD quay.io
+      - docker build -t $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_TAG .
+      - docker push $REGISTRY/$CI_PROJECT_NAME:$CI_COMMIT_TAG
